@@ -19,8 +19,8 @@ one_year = datetime.timedelta(days=365)
 three_years = datetime.timedelta(days=(3*365))
 five_years = datetime.timedelta(days=(5*365))
 seven_years = datetime.timedelta(days=(7*365))
-less_than_one_day = 0
-less_than_one_week = 0
+less_than_one_day = 0.0
+less_than_one_week = 0.0
 less_than_one_year = 0.0
 one_to_three_years = 0.0
 three_to_five_years = 0.0
@@ -55,42 +55,78 @@ for dirpath, dirnames, filenames in os.walk(dir_to_search):
   for file in filenames:
     currpath = os.path.join(dirpath, file)
     try:
-      os.stat(currpath)
+      stat_details=os.stat(currpath)
     except OSError, e:
       logit("Broken symlink, or file removed during evaluation: %s\n" % currpath)
       continue
     else:
       try:
-        file_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(currpath))
+        file_mtime = datetime.datetime.fromtimestamp(stat_details.st_mtime)
       except ValueError:
         logit("Could not determine age of file: %s\n" % currpath)
         continue
+      file_size = stat_details.st_size
     # Age of files, relative to now, compared to modify time of files
     age = now - file_mtime
     if age < one_day :
-      less_than_one_day += os.path.getsize(currpath)
+      less_than_one_day += file_size
       continue
     elif age > one_day and age < one_week :
-      less_than_one_week += os.path.getsize(currpath)
+      less_than_one_week += file_size
       continue
     elif age > one_week and age < one_year :
-      less_than_one_year += os.path.getsize(currpath)
+      less_than_one_year += file_size
       continue
     elif age > one_year and age < three_years :
-      one_to_three_years += os.path.getsize(currpath)
+      one_to_three_years += file_size
       continue
     elif  age > three_years and age < five_years :
-      three_to_five_years += os.path.getsize(currpath)
+      three_to_five_years += file_size
       continue
     elif age > five_years and age < seven_years :
-      five_to_seven_years += os.path.getsize(currpath)
+      five_to_seven_years += file_size
       continue
     elif age > seven_years :
-      greater_than_seven_years += os.path.getsize(currpath)
+      greater_than_seven_years += file_size
 
 ###
 #   Convert units to something more human friendly
 ###
+
+# def set_units(value):
+#   """
+#   Take a number, "value", and set a human readable unit to it. 
+#   """
+#   if value < 1024 :
+#     units = "Bytes"
+#     converted_val = value 
+#   elif value > 1024 and value < pow(1024,2):
+#     units = "K"
+#     converted_val = (less_than_one_day / 1024)
+#   elif value > pow(1024,2) and value < pow(1024,3):
+#     units = "M"
+#     converted_val = (less_than_one_day / pow(1024,2))
+#   elif value > pow(1024,3) and value < pow(1024,4):
+#     units = "G"
+#     converted_val = (less_than_one_day / pow(1024,3))
+#   elif value > pow(1024,4):
+#     units = "T"
+#     converted_val = (less_than_one_day / pow(1024,4))
+
+#   return converted_val, units
+
+
+# ltod = set_units(less_than_one_day)
+# ltow = set_units(less_than_one_week)
+# ltoy = set_units(less_than_one_year)
+# otty = set_units(one_to_three_years)
+# ttfy = set_units(three_to_five_years)
+# ftsy = set_units(five_to_seven_years)
+# gtsy = set_units(greater_than_seven_years)
+
+
+
+
 if less_than_one_day < 1024 :
   units = "Bytes"
   ltod = less_than_one_day, units
@@ -106,7 +142,8 @@ elif less_than_one_day > pow(1024,3) and less_than_one_day < pow(1024,4):
 elif less_than_one_day > pow(1024,4):
   units = "T"
   ltod = (less_than_one_day / pow(1024,4)), units
-  
+
+
 if less_than_one_week < 1024 :
   units = "Bytes"
   ltow = less_than_one_week, units
@@ -122,6 +159,7 @@ elif less_than_one_week > pow(1024,3) and less_than_one_week < pow(1024,4):
 elif less_than_one_week > pow(1024,4):
   units = "T"
   ltow = (less_than_one_week / pow(1024,4)), units
+
 
 if less_than_one_year < 1024 :
   units = "Bytes"
@@ -139,6 +177,7 @@ elif less_than_one_year > pow(1024,4):
   units = "T"
   ltoy = (less_than_one_year / pow(1024,4)), units
 
+
 if one_to_three_years < 1024 :
   units = "Bytes"
   otty = one_to_three_years, units
@@ -155,6 +194,7 @@ elif one_to_three_years > pow(1024,4):
   units = "T"
   otty = (one_to_three_years / pow(1024,4)), units
 
+
 if three_to_five_years < 1024 :
   units = "Bytes"
   ttfy = three_to_five_years, units
@@ -170,7 +210,8 @@ elif three_to_five_years > pow(1024,3) and three_to_five_years < pow(1024,4):
 elif three_to_five_years > pow(1024,4):
   units = "T"
   ttfy = (three_to_five_years / pow(1024,4)), units
-  
+
+
 if five_to_seven_years < 1024 :
   units = "Bytes"
   ftsy = five_to_seven_years, units
@@ -186,7 +227,8 @@ elif five_to_seven_years > pow(1024,3) and five_to_seven_years < pow(1024,4):
 elif five_to_seven_years > pow(1024,4):
   units = "T"
   ftsy = (five_to_seven_years / pow(1024,4)), units
-  
+
+
 if greater_than_seven_years < 1024 :
   units = "Bytes"
   gtsy = greater_than_seven_years, units
@@ -208,8 +250,8 @@ elif greater_than_seven_years > pow(1024,4):
 ###
 #   Display results
 ###
-print "Size of files that are less than 1 day old: \n\t %s%s" % ltod
-print "Size of files that are less than 1 week old: \n\t %s%s" % ltow
+print "Size of files that are less than 1 day old: \n\t %.2f%s" % ltod
+print "Size of files that are less than 1 week old: \n\t %.2f%s" % ltow
 print "Size of files that are less than 1 year old:\n\t %.2f%s" % ltoy
 print "Size of files that are 1-3 years old:\n\t %.2f%s" % otty
 print "Size of files that are 3-5 years old:\n\t %.2f%s" % ttfy
