@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import os, sys, datetime, sqlite3, argparse
+import os, sys, datetime, sqlite3, argparse, time
 from sqlite3 import Error
 
 #
@@ -58,6 +58,8 @@ def profile_data(dir_to_search):
     print "Scanning files recursively in current directory. Go have a sammich."
 
     now = datetime.datetime.now()
+    now_timestamp = time.mktime(now.timetuple())
+
     for dirpath, dirnames, filenames in os.walk(dir_to_search):
         for file in filenames:
             currpath = os.path.join(dirpath, file)
@@ -74,25 +76,13 @@ def profile_data(dir_to_search):
                     continue
                 file_size = stat_details.st_size
             # Age of files, relative to now, compared to modify time of files
+            # FIXME: Need to store age in epoch format foreasy math during later analysis.
             age = str(now - file_mtime)
+            age_timestamp = now_timestamp - stat_details.st_mtime
             ftype = "unk"
-            # record_contents = [
-            #                     currpath, 
-            #                     age, 
-            #                     ftype, 
-            #                     stat_details.st_mode, 
-            #                     stat_details.st_ino, 
-            #                     stat_details.st_dev, 
-            #                     stat_details.st_nlink, 
-            #                     stat_details.st_uid, 
-            #                     stat_details.st_gid, 
-            #                     stat_details.st_size, 
-            #                     stat_details.st_atime, 
-            #                     stat_details.st_mtime, 
-            #                     stat_details.st_ctime]
             record_contents = {
                 'file': currpath, 
-                'age': age, 
+                'age': age_timestamp, 
                 'ftype': ftype, 
                 'st_inode_mode': stat_details.st_mode, 
                 'st_inode': stat_details.st_ino, 
@@ -135,7 +125,7 @@ def main():
     FILE_SQL_TABLE = """ CREATE TABLE IF NOT EXISTS files (
                             id integer PRIMARY KEY AUTOINCREMENT,
                             file text NOT NULL,
-                            age text,
+                            age integer,
                             ftype text,
                             st_inode_mode varchar,
                             st_inode varchar,
