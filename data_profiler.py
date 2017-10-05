@@ -55,7 +55,7 @@ def record_file(conn, record_data):
 
 # This is where the work is really done
 def profile_data(dir_to_search):
-    print "Scanning files recursively in current directory. Go have a sammich."
+    print "Scanning files recursively in: \"{}\". Go have a sammich...".format(dir_to_search)
 
     now = datetime.datetime.now()
     now_timestamp = time.mktime(now.timetuple())
@@ -76,9 +76,8 @@ def profile_data(dir_to_search):
                     continue
                 file_size = stat_details.st_size
             # Age of files, relative to now, compared to modify time of files
-            # FIXME: Need to store age in epoch format foreasy math during later analysis.
-            age = str(now - file_mtime)
-            age_timestamp = now_timestamp - stat_details.st_mtime
+            age = str(now - file_mtime) # Human readable time format
+            age_timestamp = now_timestamp - stat_details.st_mtime # Epoch style time format
             ftype = "unk"
             record_contents = {
                 'file': currpath, 
@@ -111,11 +110,13 @@ def main():
         "--database", "-d",
         help = (
             "The database file to use. If file does not exist, it will be created."
-            )
+            ),
+        default = "{}.db".format(os.path.basename(__file__))
         )
     parser.add_argument(
         "--path", "-p",
-        help = ("The path that will be scanned")
+        help = ("The path that will be scanned"),
+        default = "."
         )
     args = parser.parse_args()
     db_file = args.database
@@ -140,17 +141,14 @@ def main():
                         ); """
 
     conn = create_connection(db_file)
-    # if conn is not None:
-    #     create_table(conn, FILE_SQL_TABLE)
-    # else:
-    #     print "ERROR: Cannot create database connection!"
 
     with conn:
         create_table(conn, FILE_SQL_TABLE)
 
         for record in profile_data(dir_to_search):
-            print record
             record_file(conn, record)
+
+    print "...Complete\nDatabase has been stored here: {}".format(db_file)
 
 
 if __name__ == '__main__':
