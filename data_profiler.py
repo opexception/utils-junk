@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import os, sys, datetime, sqlite3, argparse, time, subprocess, string, random, uuid
+import os, sys, datetime, sqlite3, argparse, time, subprocess, string, random, uuid, zlib
 from sqlite3 import Error
 
 
@@ -164,7 +164,8 @@ def characterize_stats(stats):
             },
         'emptyFiles':{
             'perOfTotalNumber':float(stats['NumberOfTypeEmpty'])/numberOfFiles,
-            'perOfTotalSize':0
+            'perOfTotalSize':0,
+            'avgSize':0
             },
         'totalFiles':numberOfFiles,
         'totalSize':stats['TotalSize']
@@ -175,44 +176,52 @@ def characterize_stats(stats):
         characterized['smallFiles']['perText'] = 0
         characterized['smallFiles']['perZip'] = 0
         characterized['smallFiles']['perUnk'] = 0
+        characterized['smallFiles']['avgSize'] = 0
     else:
         characterized['smallFiles']['perData'] = float(stats['SmallData'])/stats['NumberOfSmallFiles']
         characterized['smallFiles']['perText'] = float(stats['SmallText'])/stats['NumberOfSmallFiles']
         characterized['smallFiles']['perZip'] = float(stats['SmallZip'])/stats['NumberOfSmallFiles']
         characterized['smallFiles']['perUnk'] = float(stats['SmallZip'])/stats['NumberOfSmallFiles']
+        characterized['smallFiles']['avgSize'] = float(stats['SizeOfSmallFiles'])/stats['NumberOfSmallFiles']
 
     if stats['NumberOfMediumFiles'] == 0:
         characterized['mediumFiles']['perData'] = 0
         characterized['mediumFiles']['perText'] = 0
         characterized['mediumFiles']['perZip'] = 0
         characterized['mediumFiles']['perUnk'] = 0
+        characterized['mediumFiles']['avgSize'] = 0
     else:
         characterized['mediumFiles']['perData'] = float(stats['MediumData'])/stats['NumberOfMediumFiles']
         characterized['mediumFiles']['perText'] = float(stats['MediumText'])/stats['NumberOfMediumFiles']
         characterized['mediumFiles']['perZip'] = float(stats['MediumZip'])/stats['NumberOfMediumFiles']
         characterized['mediumFiles']['perUnk'] = float(stats['MediumUnk'])/stats['NumberOfMediumFiles']
+        characterized['mediumFiles']['avgSize'] = float(stats['SizeOfMediumFiles'])/stats['NumberOfMediumFiles']
 
     if stats['NumberOfLargeFiles'] == 0:
         characterized['largeFiles']['perData'] = 0
         characterized['largeFiles']['perText'] = 0
         characterized['largeFiles']['perZip'] = 0
         characterized['largeFiles']['perUnk'] = 0
+        characterized['largeFiles']['avgSize'] = 0
     else:
         characterized['largeFiles']['perData'] = float(stats['LargeData'])/stats['NumberOfLargeFiles']
         characterized['largeFiles']['perText'] = float(stats['LargeText'])/stats['NumberOfLargeFiles']
         characterized['largeFiles']['perZip'] = float(stats['LargeZip'])/stats['NumberOfLargeFiles']
         characterized['largeFiles']['perUnk'] = float(stats['LargeUnk'])/stats['NumberOfLargeFiles']
+        characterized['largeFiles']['avgSize'] = float(stats['SizeOfLargeFiles'])/stats['NumberOfLargeFiles']
 
     if stats['NumberOfGiantFiles'] == 0:
         characterized['giantFiles']['perData'] = 0
         characterized['giantFiles']['perText'] = 0
         characterized['giantFiles']['perZip'] = 0
         characterized['giantFiles']['perUnk'] = 0
+        characterized['giantFiles']['avgSize'] = 0
     else:
         characterized['giantFiles']['perData'] = float(stats['GiantData'])/stats['NumberOfGiantFiles']
         characterized['giantFiles']['perText'] = float(stats['GiantText'])/stats['NumberOfGiantFiles']
         characterized['giantFiles']['perZip'] = float(stats['GiantZip'])/stats['NumberOfGiantFiles']
         characterized['giantFiles']['perUnk'] = float(stats['GiantUnk'])/stats['NumberOfGiantFiles']
+        characterized['giantFiles']['avgSize'] = float(stats['SizeOfGiantFiles'])/stats['NumberOfGiantFiles']
 
     if stats['NumberOfTypeEmpty'] == 0:
         characterized['emptyFiles']['perData'] = 0
@@ -224,12 +233,6 @@ def characterize_stats(stats):
         characterized['emptyFiles']['perText'] = 0
         characterized['emptyFiles']['perZip'] = 0
         characterized['emptyFiles']['perUnk'] = 0
-
-        # 'dataFiles':{'perOfTotalNumber':stats['NumberOfTypeData']/numberOfFiles, 'perOfTotalSize':stats['SizeOfTypeData']},
-        # 'textFiles':{'perOfTotalNumber':stats['NumberOfTypeText']/numberOfFiles, 'perOfTotalSize':stats['SizeOfTypeText']},
-        # 'zipFiles':{'perOfTotalNumber':stats['NumberOfTypeZip']/numberOfFiles, 'perOfTotalSize':stats['SizeOfTypeZip']},
-        # 'emptyFiles':{'perOfTotalNumber':stats['NumberOfTypeEmpty']/numberOfFiles, 'perOfTotalSize':0},
-        # 'unkFiles':{'perOfTotalNumber':stats['NumberOfTypeUnk']/numberOfFiles, 'perOfTotalSize':stats['SizeOfTypeUnk']}
     
     return characterized
 
@@ -272,10 +275,6 @@ def get_stats_from_db(conn, age=86400):
                             sum(case when ftype = "UNK" then 1 else 0 end) as NoUnkFiles,
                             sum(st_size) as TotalSize
                         from (select * from files where age < {}) """.format(age)
-                            # sum(case when ftype = "data" then st_size else 0 end) as SizeDataFiles,
-                            # sum(case when ftype = "text" then st_size else 0 end) as SizeTextFiles,
-                            # sum(case when ftype = "zip" then st_size else 0 end) as SizeZipFiles,
-                            # sum(case when ftype = "UNK" then st_size else 0 end) as SizeUnkFiles,
 
     cur = conn.cursor()
     cur.execute(GET_STATS_SQL)
@@ -287,9 +286,9 @@ def get_stats_from_db(conn, age=86400):
         
 def generate_ascii(size):
     rand_str = lambda n: ''.join([random.choice(string.lowercase) for i in xrange(n)])
-    string = rand_str(size)
+    ascii_string = rand_str(size)
 
-    return string
+    return ascii_string
 
 
 def generate_data(size):
@@ -390,18 +389,21 @@ def generate_output(character, size, path):
 
             print("Generating {} data files of average size {}bytes".format(numOfData, avgSizeOfFile))
             for f in range(0, numOfData):
-                d = generate_data(avgSizeOfFile)
+                #d = generate_data(avgSizeOfFile)
+                d = generate_data(int(character[g]['avgSize']))
                 dump_file(g, h, d, path)
 
             print("Generating {} text files of average size {}bytes".format(numOfText, avgSizeOfFile))
             for f in range(0, numOfText):
-                d = generate_data(avgSizeOfFile)
-                dump_file(g, h, d, path)
+                #t = generate_ascii(avgSizeOfFile)
+                t = generate_ascii(int(character[g]['avgSize']))
+                dump_file(g, h, t, path)
 
             print("Generating {} compressed files of average size {}bytes".format(numOfZip, avgSizeOfFile))
             for f in range(0, numOfZip):
-                d = generate_data(avgSizeOfFile)
-                dump_file(g, h, d, path)
+                #z = generate_zip(avgSizeOfFile)
+                z = generate_zip(int(character[g]['avgSize']))
+                dump_file(g, h, z, path)
 
 
 
@@ -484,6 +486,39 @@ def main():
 
     conn = create_connection(db_file)
 
+    keys = [ 
+        'NumberOfSmallFiles',
+        'SizeOfSmallFiles',
+        'SmallData',
+        'SmallText',
+        'SmallZip',
+        'SmallUnk',
+        'NumberOfMediumFiles',
+        'SizeOfMediumFiles',
+        'MediumData',
+        'MediumText',
+        'MediumZip',
+        'MediumUnk',
+        'NumberOfLargeFiles',
+        'SizeOfLargeFiles',
+        'LargeData',
+        'LargeText',
+        'LargeZip',
+        'LargeUnk',
+        'NumberOfGiantFiles',
+        'SizeOfGiantFiles',
+        'GiantData',
+        'GiantText',
+        'GiantZip',
+        'GiantUnk',
+        'NumberOfTypeData',
+        'NumberOfTypeText',
+        'NumberOfTypeZip',
+        'NumberOfTypeEmpty',
+        'NumberOfTypeUnk',
+        'TotalSize'
+        ]
+
     if scan_only:
         with conn:
             create_table(conn, FILE_SQL_TABLE)
@@ -497,42 +532,20 @@ def main():
         with conn:
             values = get_stats_from_db(conn)
 
-        keys = [ 
-            'NumberOfSmallFiles',
-            'SizeOfSmallFiles',
-            'SmallData',
-            'SmallText',
-            'SmallZip',
-            'SmallUnk',
-            'NumberOfMediumFiles',
-            'SizeOfMediumFiles',
-            'MediumData',
-            'MediumText',
-            'MediumZip',
-            'MediumUnk',
-            'NumberOfLargeFiles',
-            'SizeOfLargeFiles',
-            'LargeData',
-            'LargeText',
-            'LargeZip',
-            'LargeUnk',
-            'NumberOfGiantFiles',
-            'SizeOfGiantFiles',
-            'GiantData',
-            'GiantText',
-            'GiantZip',
-            'GiantUnk',
-            'NumberOfTypeData',
-            'NumberOfTypeText',
-            'NumberOfTypeZip',
-            'NumberOfTypeEmpty',
-            'NumberOfTypeUnk',
-            'TotalSize'
-            ]
-            # SizeOfTypeData,
-            # SizeOfTypeText,
-            # SizeOfTypeZip,
-            # SizeOfTypeUnk
+        stats = dict(zip(keys, values))
+        characterized = characterize_stats(stats)
+
+        generate_output(characterized, dataset_size, out_path)
+    else:
+        with conn:
+            create_table(conn, FILE_SQL_TABLE)
+
+            for record in profile_data(dir_to_search):
+                record_file(conn, record)
+
+            values = get_stats_from_db(conn)
+
+        print("...Scanning Complete\nDatabase has been stored here: {}".format(db_file))
 
         stats = dict(zip(keys, values))
         characterized = characterize_stats(stats)
@@ -540,55 +553,5 @@ def main():
         generate_output(characterized, dataset_size, out_path)
 
 
-
-    # NumberOfSmallFiles = stats[0]
-    # SizeOfSmallFiles = stats[1]
-    # NumberOfMediumFiles = stats[2]
-    # SizeOfMediumFile = stats[3]
-    # NumberOfLargeFiles = stats[4]
-    # SizeOfLargeFiles = stats[5]
-    # NumberOfGiantFiles = stats[6]
-    # SizeOfGiantFiles = stats[7]
-    # NumberOfTypeData = stats[8]
-    # SizeOfTypeData = stats[9]
-    # NumberOfTypeText = stats[10]
-    # SizeOfTypeText = stats[11]
-    # NumberOfTypeZip = stats[12]
-    # SizeOfTypeZip = stats[13]
-    # NumberOfTypeEmpty = stats[14]
-    # NumberOfTypeUnk = stats[15]
-    # SizeOfTypeUnk = stats[16]
-
-
-    
-
-
 if __name__ == '__main__':
     main()
-
-
-#Query to get the data I want after scanning.
-#select 
-#     sum(case when st_size < 1024 then 1 else 0 end) as NoSmallFiles,
-#     sum(case when st_size < 1024 then st_size else 0 end) as SizeSmall,
-#     sum(case when st_size > 1024 and st_size < 104857600 then 1 else 0 end) as NoMediumFiles,
-#     sum(case when st_size > 1024 and st_size < 104857600 then st_size else 0 end) as SizeMedium,
-#     sum(case when st_size > 104857600 and st_size < 1073741824 then 1 else 0 end) as NoLargeFiles
-#     sum(case when st_size > 104857600 and st_size < 1073741824 then st_size else 0 end) as SizeLarge
-#     sum(case when st_size > 1073741824 then 1 else 0 end) as NoGiantFiles,
-#     sum(case when st_size > 1073741824 then st_size else 0 end) as SizeGiant
-# from (select * from files where age < 86400)
-
-# scan files, store path/name and all attributes. Dump attributes to sqlite db
-# analyze files. Number of files, and total size in each group
-# - <1KB
-# - 1KB < < 4KB
-# - 4K < < 1M
-# - 1M < < 10M
-# - 10 < < 1G
-# - >1G
-# run `file` command on each file to determine type. also store if bin/ascii
-# analyze to determine # of files of type bin/ascii in each group.
-#
-
-
