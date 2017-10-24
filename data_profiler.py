@@ -308,7 +308,7 @@ def get_num_and_size(total_size, total_files, percentFiles, percentSize, percent
     """
     numOfFiles = total_files*percentFiles
     #DEBUG
-    print(numOfFiles)
+    #print(numOfFiles)
 
     if numOfFiles > 0:
         avgSizeOfFile = int((total_size*percentSize)/numOfFiles)
@@ -365,17 +365,16 @@ def generate_output(character, size, path):
     """
     total_files_to_create = int((size/float(character['totalSize']))*character['totalFiles'])
     files_to_create_per_hour = int(total_files_to_create/24)
-    if total_files_to_create%24 > 0:
-        files_to_create_per_hour += 1
-
-    print("Will be creating {} files for each hour".format(files_to_create_per_hour))
+    remaining_files_to_create = total_files_to_create%24
+    
+    print("Will be creating {} files. That's {} files each hour".format(total_files_to_create, files_to_create_per_hour))
 
     for h in range(0, 24):
         for g in ['smallFiles', 'mediumFiles', 'largeFiles', 'giantFiles', 'emptyFiles']:
             print("\nGenerating: {}, for hour: {}".format(g, h))
             
             #DEBUG
-            print(character[g])
+            #print(character[g])
             
             numOfFiles, avgSizeOfFile, numOfData, numOfText, numOfZip = get_num_and_size(
                 size,
@@ -387,28 +386,61 @@ def generate_output(character, size, path):
                 character[g]['perZip']
                 )
 
-            print("Generating {} data files of average size {}bytes".format(numOfData, avgSizeOfFile))
+            print("Generating a total of {} files, each with average size of {}bytes, for a toatal of {}bytes".format(numOfData+numOfText+numOfZip, int(character[g]['avgSize']), (numOfData+numOfText+numOfZip)*int(character[g]['avgSize'])))
+
+            print("Generating {} data files of average size {}bytes ({}bytes total)".format(numOfData, int(character[g]['avgSize']), int(numOfData)*int(character[g]['avgSize'])))
             for f in range(0, numOfData):
                 #d = generate_data(avgSizeOfFile)
                 d = generate_data(int(character[g]['avgSize']))
                 dump_file(g, h, d, path)
 
-            print("Generating {} text files of average size {}bytes".format(numOfText, avgSizeOfFile))
+            print("Generating {} text files of average size {}bytes ({}bytes total)".format(numOfText, int(character[g]['avgSize']), int(numOfText)*int(character[g]['avgSize'])))
             for f in range(0, numOfText):
                 #t = generate_ascii(avgSizeOfFile)
                 t = generate_ascii(int(character[g]['avgSize']))
                 dump_file(g, h, t, path)
 
-            print("Generating {} compressed files of average size {}bytes".format(numOfZip, avgSizeOfFile))
+            print("Generating {} compressed files of average size {}bytes ({}bytes total)".format(numOfZip, int(character[g]['avgSize']), int(numOfZip)*int(character[g]['avgSize'])))
             for f in range(0, numOfZip):
                 #z = generate_zip(avgSizeOfFile)
                 z = generate_zip(int(character[g]['avgSize']))
                 dump_file(g, h, z, path)
 
+    if remaining_files_to_create > 0:
+        for h in range(0, int(remaining_files_to_create)):
+            for g in ['smallFiles', 'mediumFiles', 'largeFiles', 'giantFiles', 'emptyFiles']:
+                print("\nGenerating any remaining: {}, for hour: {}".format(g, h))
+                
+                #DEBUG
+                #print(character[g])
+                
+                numOfFiles, avgSizeOfFile, numOfData, numOfText, numOfZip = get_num_and_size(
+                    size,
+                    remaining_files_to_create,
+                    character[g]['perOfTotalNumber'],
+                    character[g]['perOfTotalSize'],
+                    character[g]['perData'] + character[g]['perUnk'],
+                    character[g]['perText'],
+                    character[g]['perZip']
+                    )
 
+                print("Generating {} data files of average size {}bytes".format(numOfData, int(character[g]['avgSize'])))
+                for f in range(0, numOfData):
+                    #d = generate_data(avgSizeOfFile)
+                    d = generate_data(int(character[g]['avgSize']))
+                    dump_file(g, h, d, path)
 
+                print("Generating {} text files of average size {}bytes".format(numOfText, int(character[g]['avgSize'])))
+                for f in range(0, numOfText):
+                    #t = generate_ascii(avgSizeOfFile)
+                    t = generate_ascii(int(character[g]['avgSize']))
+                    dump_file(g, h, t, path)
 
-
+                print("Generating {} compressed files of average size {}bytes".format(numOfZip, int(character[g]['avgSize'])))
+                for f in range(0, numOfZip):
+                    #z = generate_zip(avgSizeOfFile)
+                    z = generate_zip(int(character[g]['avgSize']))
+                    dump_file(g, h, z, path)
 
 
 def main():
