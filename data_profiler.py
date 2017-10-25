@@ -92,8 +92,8 @@ def profile_data(dir_to_search):
     now_timestamp = time.mktime(now.timetuple())
 
     for dirpath, dirnames, filenames in os.walk(dir_to_search):
-#        if ".snapshot" in dirpath: # Don't think this is needed. os.walk may already ignore hidden files
-#            continue
+        if ".snapshot" in dirpath: # Don't think this is needed. os.walk may already ignore hidden files?
+            continue
 
         for file in filenames:
             currpath = os.path.join(dirpath, file)
