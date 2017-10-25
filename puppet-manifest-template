@@ -1,0 +1,55 @@
+class <<!!CLASSNAME!!>> {
+        import "domains.pp"
+        include domains
+        $site = $domains::site
+
+        case $site {
+                "other": {}
+                "csdesign": { # Testing in Colorado Springs
+                        case $operatingsystem {
+                                "Solaris": {
+                                        case $operatingsystemrelease { # Solaris8
+                                                "5.8": {
+                                                }
+                                        }
+                                }
+                                "RedHat": {
+                                        case $lsbmajdistrelease {
+                                                4: {
+                                                        case $lsbdistid {
+                                                                "RedHatEnterpriseWS": { # RHEL4 Client
+                                                                }
+                                                        }
+                                                }
+                                                5: {
+                                                        case $lsbdistid {
+                                                                "RedHatEnterpriseClient": { # RHEL5 Client
+                                                                }
+                                                                "RedHatEnterpriseServer": { # RHEL5 Server
+                                                                }
+                                                        }
+                                                }
+                                                6: {
+                                                        case $lsbdistid {
+                                                                "RedHatEnterpriseWorkstation": { #RHEL6 Client
+                                                                }
+                                                                "RedHatEnterpriseServer": { #RHEL6 Server
+                                                                } # FIXME: Need content here
+                                                        }
+                                                }
+                                                7: {
+                                                        case $lsbdistid {
+                                                                "RedHatEnterpriseWorkstation": { #RHEL7 Client
+                                                                }
+                                                                "RedHatEnterpriseServer": { #RHEL7 Server
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                }
+                        }
+                }
+                default: { 
+                }
+        }                
+}
