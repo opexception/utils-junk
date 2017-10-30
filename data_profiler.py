@@ -97,8 +97,14 @@ def profile_data(dir_to_search):
 
         for file in filenames:
             currpath = os.path.join(dirpath, file)
-            sys.stdout.write("SCANNING: {} \r".format(currpath))
+            if len(currpath) > 66:
+                outString=currpath[:39]+"..."+currpath[-39:]
+            else:
+                outString=currpath
+
+            sys.stdout.write("\r\x1b[K SCANNING: {}".format(outString))
             sys.stdout.flush()
+
             try:
                 stat_details=os.stat(currpath)
             except OSError, e:
