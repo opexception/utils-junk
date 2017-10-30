@@ -97,16 +97,18 @@ def profile_data(dir_to_search):
 
         for file in filenames:
             currpath = os.path.join(dirpath, file)
+            sys.stdout.write("SCANNING: {} \r".format(currpath))
+            sys.stdout.flush()
             try:
                 stat_details=os.stat(currpath)
             except OSError, e:
-                print("Broken symlink, or file removed during evaluation: %s\n" % currpath)
+                print("\nBroken symlink, or file removed during evaluation: %s\n" % currpath)
                 continue
             else:
                 try:
                     file_mtime = datetime.datetime.fromtimestamp(stat_details.st_mtime)
                 except ValueError:
-                    print("Could not determine age of file: %s\n" % currpath)
+                    print("\nCould not determine age of file: %s\n" % currpath)
                     continue
                 file_size = stat_details.st_size
             # Age of files, relative to now, compared to modify time of files
