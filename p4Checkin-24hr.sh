@@ -24,7 +24,7 @@ mv ${data_dir}/${count} ${repo_dir}/
 cd ${repo_dir}/${count}
 p4 sync
 p4 add ...
-p4 submit
+p4 submit -d "Submitting data chunk ${count}"
 
 (( count++ ))
 
