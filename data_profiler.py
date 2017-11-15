@@ -394,7 +394,7 @@ def generate_output(character, size, path):
                 character[g]['perZip']
                 )
 
-            print("Generating a total of {} files, each with average size of {}bytes, for a toatal of {}bytes".format(numOfData+numOfText+numOfZip, int(character[g]['avgSize']), (numOfData+numOfText+numOfZip)*int(character[g]['avgSize'])))
+            print("Generating a total of {} files, each with average size of {}bytes, for a total of {}bytes".format(numOfData+numOfText+numOfZip, int(character[g]['avgSize']), (numOfData+numOfText+numOfZip)*int(character[g]['avgSize'])))
 
             print("Generating {} data files of average size {}bytes ({}bytes total)".format(numOfData, int(character[g]['avgSize']), int(numOfData)*int(character[g]['avgSize'])))
             for f in range(0, numOfData):

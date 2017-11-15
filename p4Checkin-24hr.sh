@@ -5,6 +5,7 @@
 repo_dir="/nobackup/rmaracle/p4-junk"
 data_dir="/nobackup/rmaracle/junk"
 count_file="/nobackup/rmaracle/p4-junk/counter"
+logfile="/home/rmaracle/p4-junk.log"
 
 # Set ADI Modules
 . /usr/cadtools/bin/modules.dir/module.sh
@@ -19,16 +20,19 @@ if [ -a ${count_file} ]
 		count=0
 fi
 
-mv ${data_dir}/${count} ${repo_dir}/
+mv -v ${data_dir}/${count} ${repo_dir}/ >> ${logfile}
 
-cd ${repo_dir}/${count}
-p4 sync
-p4 add ...
-p4 submit -d "Submitting data chunk ${count}"
+cd -v ${repo_dir}/${count} >> ${logfile}
+p4 sync  >> ${logfile}
+p4 add ...  >> ${logfile}
+p4 submit -d "Submitting data chunk ${count}"  >> ${logfile}
 
 (( count++ ))
 
 rm ${count_file}
 echo ${count} > ${count_file}
 
+echo "##########################" >> ${logfile}
+echo "## Finished" >> ${logfile}
+echo "##########################" >> ${logfile}
 
