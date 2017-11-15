@@ -22,7 +22,7 @@ fi
 
 mv -v ${data_dir}/${count} ${repo_dir}/ >> ${logfile}
 
-cd -v ${repo_dir}/${count} >> ${logfile}
+cd ${repo_dir}/${count} >> ${logfile}
 p4 sync  >> ${logfile}
 p4 add ...  >> ${logfile}
 p4 submit -d "Submitting data chunk ${count}"  >> ${logfile}
