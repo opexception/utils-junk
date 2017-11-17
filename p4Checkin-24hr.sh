@@ -76,10 +76,11 @@ if [ -d ${junk}/${count} ]
         exit 1
 fi
 
-cd ${repo_dir}/${count} | tee -a ${logfile}
+cd ${repo_dir}/${count}
+echo "Working in: $(cwd)" | tee -a ${logfile}
 p4 sync  | tee -a ${logfile}
 p4 add ...  | tee -a ${logfile}
-p4 submit -d "Submitting data chunk ${count}"  | tee -a ${logfile}
+p4 submit -d "Submitting data chunk ${count}" | tee -a ${logfile}
 
 #old_count=${count}
 if [ ${count} -eq 23 ]
