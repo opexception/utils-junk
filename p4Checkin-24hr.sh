@@ -77,7 +77,7 @@ if [ -d ${junk}/${count} ]
 fi
 
 cd ${repo_dir}/${count}
-echo "Working in: $(cwd)" | tee -a ${logfile}
+echo "Working in: ${cwd}" | tee -a ${logfile}
 p4 sync  | tee -a ${logfile}
 p4 add ...  | tee -a ${logfile}
 p4 submit -d "Submitting data chunk ${count}" | tee -a ${logfile}
