@@ -1,11 +1,11 @@
-class <<!!CLASSNAME!!>> {
+class XXXXXXXX {
         import "domains.pp"
         include domains
         $site = $domains::site
 
         case $site {
                 "other": {}
-                "csdesign": { # Testing in Colorado Springs
+                "csdesign": { #Colorado Springs
                         case $operatingsystem {
                                 "Solaris": {
                                         case $operatingsystemrelease { # Solaris8
@@ -18,6 +18,8 @@ class <<!!CLASSNAME!!>> {
                                                 4: {
                                                         case $lsbdistid {
                                                                 "RedHatEnterpriseWS": { # RHEL4 Client
+                                                                }
+                                                                "RedHatEnterpriseServer": { # RHEL4 Server
                                                                 }
                                                         }
                                                 }
@@ -34,7 +36,7 @@ class <<!!CLASSNAME!!>> {
                                                                 "RedHatEnterpriseWorkstation": { #RHEL6 Client
                                                                 }
                                                                 "RedHatEnterpriseServer": { #RHEL6 Server
-                                                                } # FIXME: Need content here
+                                                                }
                                                         }
                                                 }
                                                 7: {
